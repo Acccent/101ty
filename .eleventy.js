@@ -1,9 +1,5 @@
 const { DateTime } = require('luxon');
 const yaml = require('js-yaml');
-const load = require('eleventy-load');
-const loadHtml = require('eleventy-load-html');
-const loadJs = require('eleventy-load-js');
-const loadFile = require('eleventy-load-file');
 const metagen = require('eleventy-plugin-metagen');
 const markdownIt = require('markdown-it');
 const markdownItReplacements = require('markdown-it-replacements');
@@ -19,20 +15,23 @@ module.exports = function (eleventyConfig) {
     [/(^|[\s\p{P}])'(\S)/gu, '$1\u2018$2'],
     [/(\S)'([\s\p{P}]|$)/gu, '$1\u2019$2'],
     [/(^|[\s\p{P}])"(\S)/gu, '$1\u201c$2'],
-    [/(\S)"([\s\p{P}]|$)/gu, '$1\u201d$2']
+    [/(\S)"([\s\p{P}]|$)/gu, '$1\u201d$2'],
   ];
-  for(const r of replacements) {
-    markdownItReplacements.replacements.push(
-      { name: r[1], re: r[0], sub: r[1], default: true }
-    );
+  for (const r of replacements) {
+    markdownItReplacements.replacements.push({
+      name: r[1],
+      re: r[0],
+      sub: r[1],
+      default: true,
+    });
   }
 
   // Change default Markdown preprocessor to use above replacements
-  eleventyConfig.setLibrary('md',
+  eleventyConfig.setLibrary(
+    'md',
     markdownIt({
       html: true,
-    })
-    .use(markdownItReplacements, { ellipsis: false })
+    }).use(markdownItReplacements, { ellipsis: false })
   );
 
   // eleventy-plugin-embed-everything
@@ -55,7 +54,7 @@ module.exports = function (eleventyConfig) {
   });
 
   // eleventy-plugin-heroicons
-  eleventyConfig.addPlugin(heroicons, { className: 'heroicon', });
+  eleventyConfig.addPlugin(heroicons, { className: 'heroicon' });
 
   // Disable automatic use of .gitignore
   eleventyConfig.setUseGitIgnore(false);
@@ -64,7 +63,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.setDataDeepMerge(true);
 
   // Human readable date
-  eleventyConfig.addFilter('readableDate', (dateObj) => {
+  eleventyConfig.addFilter('readableDate', dateObj => {
     return DateTime.fromJSDate(dateObj, { zone: 'utc' }).toFormat(
       'dd LLL yyyy'
     );
@@ -79,54 +78,10 @@ module.exports = function (eleventyConfig) {
   });
 
   // Copy assets to /_site
-  eleventyConfig.addPassthroughCopy({'src/assets': 'assets/'});
+  eleventyConfig.addPassthroughCopy({ 'src/assets': 'assets/' });
 
   // Copy favicon to root of /_site
-  eleventyConfig.addPassthroughCopy({'src/favicon.ico': 'favicon.ico'});
-
-  // Minify HTML and JS
-  const doMinimize = process.env.NODE_ENV !== 'production' ? false : {
-    collapseWhitespace: true,
-    removeComments: true,
-    removeEmptyAttributes: true,
-    removeScriptTypeAttributes: true,
-    removeStyleLinkTypeAttributes: true,
-    useShortDoctype: true,
-  };
-
-  eleventyConfig.addPlugin(load, {
-    rules: [
-      {
-        test: /\.(html|md)$/,
-        loaders: [
-          {
-            loader: loadHtml,
-            options: {
-              minimize: doMinimize,
-            },
-          },
-        ],
-      },
-      {
-        test: /\.js$/,
-        loaders: [
-          {
-            loader: loadJs,
-            options: {
-              mode: process.env.NODE_ENV,
-            },
-          },
-          {
-            loader: loadFile,
-            options: {
-              name: '[name].[hash].[ext]',
-              publicPath: '/',
-            },
-          },
-        ],
-      },
-    ],
-  });
+  eleventyConfig.addPassthroughCopy({ 'src/favicon.ico': 'favicon.ico' });
 
   // Add CSS & JS output to watch target
   eleventyConfig.addWatchTarget('./src/build/');
